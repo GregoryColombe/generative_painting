@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <title>Generative Painting | Red & White</title>
+    <link rel="stylesheet" href="style/style.css">
+</head>
+
+<body>
+    <audio id="audio" src="audio.mp3"></audio>
+    <audio id="song" src="song.mp3"></audio>
+    <div class="btn">
+        <div id="btn" class="btnStyle">SWITCH</div>
+    </div>
+
+    <div class="btn-music">
+        <div id="btn1Music" class="btnStyle2">STOP</div>
+        <div id="btn2Music" class="btnStyle2">PLAY</div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+    <script>
+        const easing = {
+            easeInQuad: function (t, b, c, d) {
+                return c * (t /= d) * t + b;
+            },
+            easeOutElastic: function (t, b, c, d) {
+                var s = 1.70158;
+                var p = 0;
+                var a = c;
+                if (t == 0) return b;
+                if ((t /= d) == 1) return b + c;
+                if (!p) p = d * .3;
+                if (a < Math.abs(c)) {
+                    a = c;
+                    var s = p / 4;
+                } else var s = p / (2 * Math.PI) * Math.asin(c / a);
+                return a * Math.pow(2, -10 * t) *
+                    Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b;
+            },
+        }
+
+        //GUI
+        let formeChoice = false
+        let params = {}
+
+        const gui = new dat.GUI()
+
+        let xRed, yRed
+
+        let xWhite, yWhite
+
+        params = {
+            // red
+            xRed: 250,
+            yRed: 1000,
+            opacityRed: 0.35,
+
+            // white
+            xWhite: 1250,
+            yWhite: 1000,
+            opacityWhite: 0.25,
+            rotation: 1000,
+        }
+
+        function addRed() {
+            xRed = gui.add(params, "xRed", 1, 1000)
+            yRed = gui.add(params, "yRed", 1, 4000)
+            opacityRed = gui.add(params, 'opacityRed', 0.15, 1)
+        }
+        function removeRed() {
+            gui.remove(xRed)
+            gui.remove(yRed)
+            gui.remove(opacityRed)
+        }
+        function addWhite() {
+            xWhite = gui.add(params, "xWhite", 500, 3000)
+            yWhite = gui.add(params, "yWhite", 1, 2000)
+            opacityWhite = gui.add(params, 'opacityWhite', 0.15, 1)
+            rotation = gui.add(params, 'rotation',-1000, 1000)
+            
+        }
+        function removeWhite() {
+            gui.remove(xWhite)
+            gui.remove(yWhite)
+            gui.remove(opacityWhite)
+            gui.remove(rotation)
+        }
+
+        addRed()
+
+
+        document.getElementById('btn').addEventListener('click', () => {
+            if (formeChoice === false) {
+                 // add class pour partie blanche suur bouton
+                // remove class pour red
+                document.getElementById('btn').classList.add("btn-circle");
+                removeRed()
+                addWhite()
+            } 
+            else{
+                // add class pour partie red suur bouton
+                // remove class pour white
+                document.getElementById('btn').classList.remove("btn-circle");
+                removeWhite()
+                addRed()
+            }
+            formeChoice = !formeChoice
+        })
+
+
+        var btn1Music = document.getElementById("btn1Music");
+        btn1Music.addEventListener("click", (e) => {
+            document.getElementById('audio').pause();
+            document.getElementById('audio').currentTime = 0;
+        });
+
+        var btn2Music = document.getElementById("btn2Music");
+        btn2Music.addEventListener("click", (e) => {
+            document.getElementById('audio').play();
+        });
+
+
+        let simplex = new SimplexNoise(Math.random);
+        let canvas = document.querySelector('#canvas');
+        let ctx = canvas.getContext('2d');
+        let WIDTH = canvas.width;
+        let HEIGHT = canvas.height;
+        let particules = [];
+        const nbPoints = 200;
+
+        let now = Date.now();
+        let lastTime = now;
+        let deltaTime = 16;
+
+        let duration = 120
+        let timer = 0
+        let size = 10
+        let start
+
+        let mouse = {
+            x: 1,
+            y: 1
+        }
+
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            WIDTH = canvas.width;
+            HEIGHT = canvas.height;
+        }
+
+        document.addEventListener('click', (e) => {
+            mouse.x = e.clientX
+            mouse.y = e.clientY
+            console.log('mouse.x : ' + mouse.x + 'mouse.y : ' + mouse.y)
+
+            // document.getElementById('song').play();
+            // setTimeout(mafonction, 80);
+
+            timer = 0
+            start = true
+
+        })
+
+        let time = 0;
+        update()
+
+
+        function getRandom(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+            if (start) {
+                ctx.fillStyle = 'white'
+
+                const progression = timer / duration
+                if (timer < duration / 2) {
+
+                    size = easing.easeOutElastic(timer, 0, 100, duration / 2)
+                } else if (timer > duration / 2) {
+
+                    size = easing.easeInQuad(timer - duration / 2, 100, -100, duration / 2)
+                }
+                // console.log(timer)
+
+
+                if (formeChoice === false) {
+
+                    ctx.beginPath()
+                    ctx.rect(mouse.x - size / 2, mouse.y - size / 2, size, size);
+                    ctx.globalAlpha = 0.7;
+                    ctx.fillStyle = "transparent"
+                    ctx.fill()
+                    ctx.strokeStyle = "#ED3232 "
+                    ctx.lineWidth = 10;
+                    ctx.stroke()
+                    ctx.closePath()
+                    ctx.restore();
+                }
+                if (formeChoice === true) {
+                    if (formeChoice == 'both') {
+                        ctx.globalAlpha = 1;
+                    }
+                    ctx.beginPath()
+                    ctx.arc(mouse.x - size / size, mouse.y - size / size, size, size, 0, 2 * Math.PI);
+                    ctx.globalAlpha = 0.7;
+                    ctx.fillStyle = "transparent"
+                    ctx.fill();
+                    ctx.strokeStyle = "#fff "
+                    ctx.lineWidth = 10;
+                    ctx.stroke()
+                    ctx.closePath()
+                    ctx.restore();
+                }
+
+                timer++
+                if (timer > duration) {
+                    start = false;
+                }
+
+            }
+
+            time += deltaTime
+
+            for (x = 0; x < WIDTH; x += 10) {
+                for (y = 0; y < HEIGHT; y += 20) {
+                    let n
+                    if (formeChoice === false) {
+                        // n = simplex.noise3D(x / 250, y / 1000, time / 2000);
+                        n = simplex.noise3D(x / params.xRed, y / params.yRed, time / 2000);
+                        ctx.beginPath()
+                        //ctx.globalAlpha = 0.35;
+                        ctx.globalAlpha = params.opacityRed
+                        ctx.save();
+                        ctx.translate(x , y * n );
+                        ctx.rotate(45 * -n, 50n)
+                        ctx.scale(n * 1, n * 1);
+                        ctx.fillStyle = '#ED3232';
+                        //aFabFF
+                        ctx.fillRect(0, 0, 10, 10);
+                        ctx.closePath()
+                        ctx.restore();
+
+                        n = simplex.noise3D(x / 10, y / 10, time / 2000);
+                        ctx.globalAlpha = 0.25
+
+                        ctx.save();
+                        ctx.translate(x * 10, 50 + y * 20);
+                        //ctx.rotate(10 * n, 100 * n)
+                        ctx.scale(n * 0.55, n * 2);
+                        ctx.fillStyle = '#ED3232';
+                        ctx.lineWidth = 10;
+                        ctx.fillRect(0, 0, 10, 100);
+                        ctx.restore();
+                    }
+
+                    if (formeChoice === true) {
+                        n = simplex.noise3D(x / params.xWhite, y / params.yWhite, time * 0.000050);
+                        ctx.beginPath()
+                        ctx.globalAlpha = params.opacityWhite;
+                        ctx.save();
+                        ctx.translate(x + n * 100, y - n * params.rotation);
+                        // ou ctx.translate(x , y -n * 1000 );
+                        ctx.rotate(45 * -n, 50n )
+                        ctx.scale(n * 1, n * 1);
+                        ctx.fillStyle = '#fff';
+                        //ctx.fillRect(10, 0, 10, 10);
+
+                        ctx.arc(10, 10, 6, 6, 0, 2 * Math.PI);
+                        ctx.fillStyle = "#fff"
+                        ctx.fill()
+                        ctx.closePath()
+                        ctx.restore();
+
+                        // n = simplex.noise3D(x /10, y / 10, Date.now() / 6000);
+                        // ctx.globalAlpha = 0.25;
+                        // ctx.save();
+                        // ctx.translate(x* 10 , 50 + y* 20 );
+                        // //ctx.rotate(10 * n, 100 * n)
+                        // ctx.scale(n * 0.55, n * 2);
+                        // ctx.fillStyle = '#fff';
+                        // ctx.fillRect(0, 0, 10, 100);
+                        // ctx.restore();
+
+                    }
+
+                }
+            }
+            now = Date.now();
+            deltaTime = now - lastTime;
+            requestAnimationFrame(update);
+            lastTime = now;
+            // console.log(deltaTime)
+        }
+
+        resize();
+        window.addEventListener('resize', resize, false);
+        resize();
+    </script>
+
+
+</body>
+
+</html>

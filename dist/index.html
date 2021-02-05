@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <title>Document</title>
+</head>
+<body>
+<style>* {
+        margin: 0;
+        padding: 0;
+    }
+    html, body {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+    }
+
+    canvas {
+        display: block;
+    }</style>
+
+<canvas id="canvas"></canvas>
+<!-- <script src="classes/vector.js"></script>
+<script src="classes/Circle.js"></script> -->
+<script>var simplex = new SimplexNoise(Math.random);
+console.log(simplex);
+var canvas = document.querySelector('#canvas');
+var ctx = canvas.getContext('2d');
+var WIDTH = canvas.width;
+var HEIGHT = canvas.height;
+var particules = [];
+var nbPoints = 200;
+var now = Date.now();
+var lastTime = now;
+var deltaTime = 6; //GUI
+// const gui = new dat.GUI()
+// let params = {
+// amplitude: 350,
+// offset: 0.5,
+// scale: 110,
+// timesAngle: 6
+// }
+// gui.add(params, "amplitude", 0, 700)
+// gui.add(params, "offset", 0.1, 0.9)
+// gui.add(params, "scale", 0, 200)
+// gui.add(params, "timesAngle", 0, 20)
+
+var mouse = {
+  x: 1,
+  y: 1
+};
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  WIDTH = canvas.width;
+  HEIGHT = canvas.height; // draw();
+  //update()
+}
+
+document.addEventListener('click', function (e) {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  console.log('mouse.x : ' + mouse.x + 'mouse.y : ' + mouse.y);
+  update();
+});
+
+function getRandom(min, max) {
+  return Math.random() * (max - min) + min;
+} // function drawCircles() {
+//     for (let i = 0; i < nbPoints; i++) {
+//         let position = {x: Math.random() * WIDTH, y: Math.random() * HEIGHT};
+//         let velocity = {x: Math.random() * .2, y: Math.random() * .2};
+//         let particule = new Circle(position, velocity);
+//         particules.push(particule);
+//         particule.draw(ctx)
+//     }
+// }
+// function draw() {
+//     ctx.clearRect(0, 0, WIDTH, HEIGHT);
+//     drawCircles();
+// }
+
+
+var color = ['red', 'blue', 'pink'];
+var ta = Math.floor(Math.random() * color.length);
+console.log(ta);
+
+function update() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+  for (x = 0; x < WIDTH; x += 10) {
+    for (y = 0; y < HEIGHT; y += 10) {
+      var n = simplex.noise3D(x / 200, y / 1000, Date.now() * 0.0005);
+      ctx.globalAlpha = 0.6;
+      ctx.save();
+      ctx.translate(x, y * n);
+      ctx.rotate(45 * -n, 50); //ctx.scale(n * 10, n * 30);
+
+      ctx.fillStyle = '#aFabFF'; // color[]
+
+      ctx.fillRect(0, 0, 10, 10);
+      ctx.restore(); // let n = simplex.noise3D(x / 1000, y / 1000, Date.now() / 5000);
+      // ctx.globalAlpha = 0.6;
+      // ctx.save();
+      // ctx.translate(x , y );
+      // ctx.rotate(100 * n, 100 * n)
+      // ctx.scale(n * 30, n * 1);
+      // ctx.fillStyle = '#aFabFF';
+      // ctx.fillRect(0, 0, 10, 10);
+      // ctx.restore();
+    }
+  }
+
+  now = Date.now();
+  deltaTime = now - lastTime;
+  requestAnimationFrame(update);
+  lastTime = now; // console.log(deltaTime)
+}
+
+resize();
+window.addEventListener('resize', resize, false);
+resize();</script>
+<script type="text/javascript" src="/dat.gui.7a88e894.js"></script>
+
+</body>
+</html>
